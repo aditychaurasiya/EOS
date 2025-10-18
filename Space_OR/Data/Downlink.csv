@@ -1,0 +1,5 @@
+﻿Time Slot,Satellite ID,Ground Station ID,Duration (min),Max Data (GB)
+00:15–00:20,S1,GS1,5,10
+00:15–00:25,S2,GS2,10,20
+02:00–02:05,S3,GS3,5,10
+02:00–02:10,S4,GS4,10,20

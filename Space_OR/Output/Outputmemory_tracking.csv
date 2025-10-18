@@ -1,0 +1,16 @@
+Satellite ID,Time Slot,Memory Level (GB),Memory Capacity (GB),Memory Usage (%),Observations This Slot,Downlinks This Slot,Data Added (GB),Status
+S1,00:00,0.0,100,0.0,1,0,5,Normal
+S1,00:05,0.0,100,0.0,0,0,0,Normal
+S1,01:30,0.0,100,0.0,1,0,5,Normal
+S2,00:00,0.0,100,0.0,1,0,5,Normal
+S2,00:05,0.0,100,0.0,0,0,0,Normal
+S2,01:30,0.0,100,0.0,0,0,0,Normal
+S3,00:00,0.0,100,0.0,0,0,0,Normal
+S3,00:05,0.0,100,0.0,1,0,5,Normal
+S3,01:30,0.0,100,0.0,0,0,0,Normal
+S4,00:00,0.0,100,0.0,0,0,0,Normal
+S4,00:05,0.0,100,0.0,0,0,0,Normal
+S4,01:30,0.0,100,0.0,1,0,5,Normal
+S5,00:00,0.0,100,0.0,0,0,0,Normal
+S5,00:05,0.0,100,0.0,0,0,0,Normal
+S5,01:30,0.0,100,0.0,0,0,0,Normal
