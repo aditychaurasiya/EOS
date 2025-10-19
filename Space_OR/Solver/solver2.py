@@ -6,9 +6,10 @@ class Solver:
     def __init__(self, input_data):
         self.x = {}
         self.y = {}
+        self.d = {}  # downlink amount variable
         self.m = {}
-        self.vt_window = {}  # Now a parameter dictionary, not decision variable
-        self.downlink_window = {}  # Now a parameter dictionary, not decision variable
+        self.vt_window = {}
+        self.downlink_window = {}
 
         # Store input data
         self.downlink = input_data.downlink
@@ -29,16 +30,9 @@ class Solver:
         self.time_slots, self.dl_time_slots = input_data._create_time_slot_mapping()
         self.combined_slots = sorted(set(self.time_slots + self.dl_time_slots))
 
-        # Build parameter dictionaries from input data
+        # Parameter dictionaries from input data
         self._build_vtw_parameters()
         self._build_downlink_parameters()
-
-        # Debug: Print time slot information
-        print(f"\n=== TIME SLOT DEBUG ===")
-        print(f"Observation time slots: {self.time_slots}")
-        print(f"Downlink time slots: {self.dl_time_slots}")
-        print(f"Combined slots (sorted): {self.combined_slots[:10]}...")  # First 10
-        print(f"Total combined slots: {len(self.combined_slots)}\n")
 
         # Env
         self.env = gp.Env()
@@ -63,9 +57,6 @@ class Solver:
                 self.vt_window[s, t, k] = 1
                 vtw_count += 1
 
-        print(
-            f"VTW Parameters: {vtw_count} windows enabled out of {len(self.statellite) * len(self.target) * len(self.time_slots)} possible")
-
     def _build_downlink_parameters(self):
         """Build downlink window binary parameters from input data"""
         # Initialize all to 0
@@ -82,21 +73,7 @@ class Solver:
             g = dl_obj.groundstationid
             k = dl_obj.timeSlotStart.strip()
 
-            print(f"Processing: {s} -> {g} at '{k}'")
-            print(f"  s in statellite? {s in self.statellite}")
-            print(f"  g in groundstation? {g in self.groundstation}")
-            print(f"  k in dl_time_slots? {k in self.dl_time_slots}")
-
-            if s in self.statellite and g in self.groundstation and k in self.dl_time_slots:
-                self.downlink_window[s, g, k] = 1
-                dl_count += 1
-                print(f"  ✓ Downlink window enabled: {s} -> {g} at {k}")
-            else:
-                print(f"  ✗ Downlink window NOT enabled")
-
-        print(
-            f"\nDownlink Parameters: {dl_count} windows enabled out of {len(self.statellite) * len(self.groundstation) * len(self.dl_time_slots)} possible\n")
-
+          
     def run(self):
         self.create_decision_variables()
         self.create_constraints()
@@ -122,6 +99,17 @@ class Solver:
                         name=f"y_{s}_{g}_{k.replace(':', '').replace('-', '_').replace('–', '_')}"
                     )
 
+        # Decision variables for downlink amount (continuous, 0 to 10 GB)
+        for s in self.statellite:
+            for g in self.groundstation:
+                for k in self.dl_time_slots:
+                    self.d[s, g, k] = self.eos_model.addVar(
+                        vtype=GRB.CONTINUOUS,
+                        lb=0,
+                        ub=self.data_down,
+                        name=f"d_{s}_{g}_{k.replace(':', '').replace('-', '_').replace('–', '_')}"
+                    )
+
         # Memory variables for all combined slots
         for s in self.statellite:
             for k in self.combined_slots:
@@ -142,7 +130,7 @@ class Solver:
             name="vtw_constraint"
         )
 
-        # 2. Observation limit per day (using max_per_day_obs = 5 from __init__)
+        # 2. Observation limit per day
         for s in self.statellite:
             self.eos_model.addConstr(
                 gp.quicksum(self.x[s, t, k]
@@ -173,37 +161,39 @@ class Solver:
                         if (s, t, k) in self.x
                     )
 
+                    # Use variable downlink amount d instead of fixed data_down * y
                     dl_out = gp.quicksum(
-                        self.data_down * self.y[s, g, k]
+                        self.d[s, g, k]
                         for g in self.groundstation
-                        if (s, g, k) in self.y
+                        if (s, g, k) in self.d
                     )
 
                     print(
-                        f"{s} at {k}: Initial = obs_in - dl_out (dl terms: {len([1 for g in self.groundstation if (s, g, k) in self.y])})")
+                        f"{s} at {k}: Initial = obs_in - dl_out (dl terms: {len([1 for g in self.groundstation if (s, g, k) in self.d])})")
 
                     self.eos_model.addConstr(
                         self.m[s, k] == obs_in - dl_out,
                         name=f"mem_initial_{s}"
                     )
+
                 else:
                     prev_k = self.combined_slots[idx - 1]
 
-                    # Data added from observations at CURRENT slot k
+                    # Observations at CURRENT slot k
                     obs_in = gp.quicksum(
                         self.data_per_obs * self.x[s, t, k]
                         for t in self.target
                         if (s, t, k) in self.x
                     )
 
-                    # Data removed from downlinks at CURRENT slot k
+                    # Use variable downlink amount d instead of fixed data_down * y
                     dl_out = gp.quicksum(
-                        self.data_down * self.y[s, g, k]
+                        self.d[s, g, k]
                         for g in self.groundstation
-                        if (s, g, k) in self.y
+                        if (s, g, k) in self.d
                     )
 
-                    num_dl_terms = len([1 for g in self.groundstation if (s, g, k) in self.y])
+                    num_dl_terms = len([1 for g in self.groundstation if (s, g, k) in self.d])
                     if num_dl_terms > 0:
                         print(f"{s} at {k}: m[{k}] = m[{prev_k}] + obs - dl (dl terms: {num_dl_terms})")
 
@@ -211,6 +201,7 @@ class Solver:
                         self.m[s, k] == self.m[s, prev_k] + obs_in - dl_out,
                         name=f"memory_balance_{s}_{k.replace(':', '').replace('-', '_').replace('–', '_')}"
                     )
+
         print()
 
         # 5. Memory capacity constraint
@@ -229,6 +220,17 @@ class Solver:
                         self.eos_model.addConstr(
                             self.y[s, g, k] <= self.downlink_window[s, g, k],
                             name=f"downlink_window_{s}_{g}_{k.replace(':', '').replace('-', '_').replace('–', '_')}"
+                        )
+
+        # 6.5. Link downlink amount to binary decision
+        # d can only be > 0 if y = 1 (downlink window is used)
+        for s in self.statellite:
+            for g in self.groundstation:
+                for k in self.dl_time_slots:
+                    if (s, g, k) in self.y and (s, g, k) in self.d:
+                        self.eos_model.addConstr(
+                            self.d[s, g, k] <= self.data_down * self.y[s, g, k],
+                            name=f"link_downlink_amount_{s}_{g}_{k.replace(':', '').replace('-', '_').replace('–', '_')}"
                         )
 
         # 7. Ground station conflict - one satellite per ground station per slot
@@ -261,30 +263,17 @@ class Solver:
             if (s, t, k) in self.x
         )
 
-        # Secondary: STRONGLY encourage downlinks with very high weight
-        downlink_value = 1000 * gp.quicksum(
-            self.y[s, g, k]
-            for s in self.statellite
-            for g in self.groundstation
-            for k in self.dl_time_slots
-            if (s, g, k) in self.y
-        )
+        # # Secondary: STRONGLY encourage downlinks with very high weight
+        # downlink_value = 1000 * gp.quicksum(
+        #     self.y[s, g, k]
+        #     for s in self.statellite
+        #     for g in self.groundstation
+        #     for k in self.dl_time_slots
+        #     if (s, g, k) in self.y
+        # )
 
-        print(f"\n=== OBJECTIVE DEBUG ===")
-        print(
-            f"Number of observation terms in objective: {len([1 for s in self.statellite for t in self.target for k in self.time_slots if (s, t, k) in self.x])}")
-        print(
-            f"Number of downlink terms in objective: {len([1 for s in self.statellite for g in self.groundstation for k in self.dl_time_slots if (s, g, k) in self.y])}")
-
-        self.eos_model.setObjective(obs_value + downlink_value, GRB.MAXIMIZE)
-
-        # Verify objective was set
-        print(f"Objective set successfully\n")
-
+        
     def solve_mip(self):
-        # Disable presolve to prevent Gurobi from removing y variables
-        self.eos_model.setParam('Presolve', 0)
-
         self.eos_model.optimize()
         self.eos_model.write("eos.lp")
 
@@ -292,14 +281,16 @@ class Solver:
             print("The model is infeasible.")
             self.eos_model.computeIIS()
             self.eos_model.write("model.ilp")
+
         elif self.eos_model.status == GRB.OPTIMAL:
             print("Optimal solution found with objective value:", self.eos_model.objVal)
+
             total_obs = sum(1 for (s, t, k), var in self.x.items() if var.x > 0.5)
             total_downlinks = sum(1 for (s, g, k), var in self.y.items() if var.x > 0.5)
+
             print(f"Total observations scheduled: {total_obs}")
             print(f"Total downlinks scheduled: {total_downlinks}")
 
-            # Print detailed solution
             print("\n=== OBSERVATIONS ===")
             for (s, t, k), var in self.x.items():
                 if var.x > 0.5:
@@ -308,7 +299,8 @@ class Solver:
             print("\n=== DOWNLINKS ===")
             for (s, g, k), var in self.y.items():
                 if var.x > 0.5:
-                    print(f"  {s} downlinks to {g} at {k}")
+                    amount = self.d[s, g, k].x if (s, g, k) in self.d else 0
+                    print(f"  {s} downlinks to {g} at {k}: {amount:.2f} GB")
 
             print("\n=== MEMORY STATUS (All Slots) ===")
             for s in self.statellite:
@@ -318,12 +310,15 @@ class Solver:
                         print(f"  {k}: {self.m[s, k].x:.2f} GB")
 
             print("\n=== DOWNLINK VARIABLES DEBUG ===")
-            print("Checking y variables:")
+            print("Checking y and d variables:")
             for s in self.statellite:
                 for g in self.groundstation:
                     for k in self.dl_time_slots:
                         if (s, g, k) in self.y:
                             window_val = self.downlink_window.get((s, g, k), "NOT FOUND")
-                            print(f"  y[{s},{g},{k}] = {self.y[s, g, k].x:.2f}, window = {window_val}")
+                            d_val = self.d[s, g, k].x if (s, g, k) in self.d else "N/A"
+                            print(
+                                f"  y[{s},{g},{k}] = {self.y[s, g, k].x:.2f}, d[{s},{g},{k}] = {d_val:.2f} GB, window = {window_val}")
+
         else:
             print(f"Optimization ended with status: {self.eos_model.status}")
