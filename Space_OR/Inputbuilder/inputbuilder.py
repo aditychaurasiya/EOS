@@ -109,26 +109,4 @@ class Inputbuilder:
         # Convert to sorted lists for consistent ordering
         return sorted(list(time_slots)), sorted(list(dl_time_slots))
 
-    def _is_valid_vtw(self, satellite_id, target_id, time_slot):
-        """Check if a Visual Time Window exists for given satellite, target and time slot"""
-        for vtw in self.vtw.values():
-            if (vtw.satelliteid == satellite_id and
-                vtw.target_id == target_id and
-                vtw.timeSlotStart == time_slot):
-                return True
-        return False
-
-    def _is_valid_downlink(self, satellite_id, groundstation_id, time_slot):
-        for dl in self.downlink.values():
-            if (dl.satelliteid == satellite_id and
-                    dl.groundstationid == groundstation_id and
-                    dl.timeSlotStart == time_slot):
-                return True
-        return False
-
-    def _get_day_from_time_slot(self, time_slot):
-        """Extract the day from a time slot string (assuming all slots are within same day if not specified)"""
-        # If the time slot contains date information, extract it
-        # For now, assuming all time slots are within the same day
-        return 1  # Return 1 as default day number
 
