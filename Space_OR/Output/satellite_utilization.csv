@@ -1,0 +1,6 @@
+Satellite ID,Orbit,Memory Capacity (GB),Max Obs/Day,Total Observations,Unique Targets,Total Downlinks,Data Downlinked (GB),Final Memory (GB),Final Power (Wh),Utilization (%),Status
+S1,1,100,20,2,2,1,5.0,5.0,55.0,1.4,Active
+S2,1,100,20,1,1,1,5.0,0.0,65.0,0.7,Active
+S3,1,100,20,1,1,1,5.0,0.0,65.0,0.7,Active
+S4,1,100,20,1,1,1,5.0,0.0,65.0,0.7,Active
+S5,1,100,20,0,0,0,0.0,0.0,100.0,0.0,Idle
