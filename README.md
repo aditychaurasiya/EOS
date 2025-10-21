@@ -1,6 +1,5 @@
 # EOS: Earth Observation Scheduler
 
-[![Ask DeepWiki](https://devin.ai/assets/askdeepwiki.png)](https://deepwiki.com/aditychaurasiya/EOS)
 
 EOS is a sophisticated optimization tool designed to solve the complex challenge of scheduling Earth observation tasks for a satellite constellation. It uses mathematical optimization (Mixed-Integer Programming) with the Gurobi solver to generate an optimal observation and downlink plan that maximizes the value of collected data while respecting a wide range of operational, physical, and resource constraints.
 
