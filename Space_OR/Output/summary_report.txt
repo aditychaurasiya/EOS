@@ -1,0 +1,33 @@
+EARTH OBSERVATION SCHEDULING - EXECUTIVE SUMMARY
+============================================================
+Generated on: 2025-10-21 22:36:14
+
+OPTIMIZATION RESULTS:
+  Objective Value: 111.00
+  Solution Status: Optimal
+
+MISSION STATISTICS:
+  Total Observations Scheduled: 5
+  Unique Targets Observed: 5
+  Target Coverage: 100.0%
+  Total Downlinks Scheduled: 4
+  Total Data Downlinked: 20.00 GB
+
+RESOURCE UTILIZATION:
+  Active Satellites: 4/5
+  Ground Stations Used: 4/5
+
+VALUE ANALYSIS:
+  Total Weighted Value Captured: 109
+  Average Target Urgency: 3.00
+  Average Target Importance: 6.20
+
+OUTPUT FILES GENERATED:
+  - observation_schedule.csv
+  - downlink_schedule.csv
+  - satellite_utilization.csv
+  - target_analysis.csv
+  - memory_tracking.csv
+  - power_tracking.csv
+  - resource_timeline.csv
+  - summary_report.txt

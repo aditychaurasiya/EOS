@@ -5,6 +5,7 @@ from Entities.GroundStation import GroundStation
 from Entities.Statellite import Statellite
 from Entities.Target import Target
 from Entities.Visual_Time_Window import Visual_Time_Window
+from Entities.RechargeWindow import RechargeWindow
 
 class Inputbuilder:
 
@@ -14,6 +15,7 @@ class Inputbuilder:
         self.statellite = {}
         self.target = {}
         self.vtw = {}
+        self.rechargewindow = {}
         self.path = 'Data\\'
 
     def build(self):
@@ -22,6 +24,7 @@ class Inputbuilder:
         self.read_statellite_data(self.path + "Satellite.csv")
         self.read_target_data(self.path + "Target.csv")
         self.read_vtw_data(self.path + "VTW.csv")
+        self.read_rechargewindow_data(self.path + "RechargeWindow.csv")
 
     def read_downlink_data(self, file_name):
         downlink_df = pd.read_csv(file_name)
@@ -86,10 +89,18 @@ class Inputbuilder:
             satellite_id = row['Satellite ID']
             target_id = row['Target ID']
             duration = row['Duration (min)']
-
-            # Visual_Time_Window constructor: (timeSlotStart, timeSlotEnd, satelliteid, target_id, duration)
             vtw_obj = Visual_Time_Window(time_slot_start, time_slot_end, satellite_id, target_id, duration)
             self.vtw[len(self.vtw)] = vtw_obj
+
+    def read_rechargewindow_data(self,file_name):
+        rechargewindow_df = pd.read_csv(file_name)
+        for index, row in rechargewindow_df.iterrows():
+            time_slot_start = row['Time Slot '].split('–')[0].strip()
+            time_slot_end = row['Time Slot '].split('–')[1].strip()
+            satellite_id = row['Satellite ID']
+
+            rechargewindow_obj= RechargeWindow(time_slot_start, time_slot_end, satellite_id)
+            self.rechargewindow[satellite_id] = rechargewindow_obj
 
     def _create_time_slot_mapping(self):
         # Create time slot mappings for both VTW and downlink slots

@@ -1,0 +1,5 @@
+Satellite ID,Ground Station ID,Time Slot,Data Transferred (GB),Max Data Rate (GB/slot),Ground Station Location,Memory Before (GB),Memory After (GB),Power Level (Wh),Power Consumed (Wh)
+S1,GS1,00:15,5.0,10,"(40.7, -74.0)",0.0,-5.0,65.0,25.0
+S2,GS2,00:15,5.0,10,"(51.5, 0.1)",0.0,-5.0,65.0,25.0
+S3,GS3,02:00,5.0,10,"(35.7, 139.7)",0.0,-5.0,65.0,25.0
+S4,GS4,02:00,5.0,10,"(-33.9, 151.2)",0.0,-5.0,65.0,25.0
