@@ -20,6 +20,7 @@ The repository is organized into distinct modules, each with a specific responsi
 Space_OR/
 ├── Data/                 # Input CSV files for the model
 │   ├── Satellite.csv
+│   ├── RechargeWindow.csv
 │   ├── Target.csv
 │   ├── GroundStation.csv
 │   ├── VTW.csv           # Visual Time Windows
@@ -53,6 +54,10 @@ The model adheres to several critical constraints to ensure a feasible and reali
     *   Onboard memory increases with each observation.
     *   Memory decreases when data is downlinked to a ground station.
     *   The memory level must not exceed the satellite's storage capacity.
+*   **Power Management:**
+    *   Onboard power decreases with each observation.
+    *   Power decreases when data is downlinked to a ground station.
+    *   The Power level must not exceed the satellite's storage capacity.
 *   **Downlink Windows:** Data can only be downlinked during specific communication windows with a ground station.
 *   **Resource Conflicts:**
     *   A ground station can only communicate with one satellite at any given time.
