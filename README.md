@@ -58,6 +58,7 @@ The model adheres to several critical constraints to ensure a feasible and reali
     *   Onboard power decreases with each observation.
     *   Power decreases when data is downlinked to a ground station.
     *   The Power level must not exceed the satellite's storage capacity.
+    *   Power can be recharged with its panel in particular time window.
 *   **Downlink Windows:** Data can only be downlinked during specific communication windows with a ground station.
 *   **Resource Conflicts:**
     *   A ground station can only communicate with one satellite at any given time.
